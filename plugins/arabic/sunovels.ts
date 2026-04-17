@@ -52,7 +52,7 @@ class Sunovels implements Plugin.PagePlugin {
 
   async popularNovels(
     page: number,
-    { showLatestNovels, filters }: Plugin.PopularNovelsOptions<Filters>,
+    { filters }: Plugin.PopularNovelsOptions<Filters>,
   ): Promise<Plugin.NovelItem[]> {
     const pageCorrected = page - 1;
     let link = `${this.site}library?`;
@@ -196,21 +196,18 @@ class Sunovels implements Plugin.PagePlugin {
     const result = await fetchApi(new URL(chapterUrl, this.site).toString());
     const body = await result.text();
     const loadedCheerio = parseHTML(body);
+
     let chapterText = '';
-    loadedCheerio('div.chapter-content').each((idx, ele) => {
-      loadedCheerio(ele)
-        .find('p')
-        .not('.d-none')
-        .each((idx, textEle) => {
-          chapterText +=
-            loadedCheerio(textEle)
-              .map((_, pEle) => loadedCheerio(pEle).text().trim())
-              .get()
-              .join(' ') + ' ';
-        });
-    });
-    chapterText = chapterText.trim();
-    return chapterText;
+    loadedCheerio('div.chapter-content p')
+      .not('.d-none')
+      .each((idx, ele) => {
+        const text = loadedCheerio(ele).text().trim();
+        if (text) {
+          chapterText += `<p>${text}</p>`;
+        }
+      });
+
+    return chapterText.trim();
   }
 
   async searchNovels(
